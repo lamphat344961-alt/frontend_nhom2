@@ -1,50 +1,51 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'screens/auth/login_screen.dart'; // Import màn hình đăng nhập
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'http_overrides.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/owner/owner_dashboard_screen.dart';
+import 'utils/token_manager.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  // Đảm bảo các thành phần của Flutter đã sẵn sàng trước khi chạy code.
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Cấu hình để bỏ qua kiểm tra chứng chỉ SSL (cho môi trường dev).
+  HttpOverrides.global = MyHttpOverrides();
+
+  // Tải các biến môi trường từ file .env.
+  await dotenv.load(fileName: ".env");
+
+  // Kiểm tra xem có token đăng nhập được lưu từ lần trước không.
+  final String? token = await TokenManager.getToken();
+
+  // Chạy ứng dụng và truyền vào trạng thái đăng nhập.
+  runApp(MyApp(isLoggedIn: token != null));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  // Biến để lưu trạng thái đăng nhập.
+  final bool isLoggedIn;
+
+  // Constructor để nhận trạng thái đăng nhập từ hàm main.
+  const MyApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Quản lý Giao hàng',
-      debugShowCheckedModeBanner: false,
+      title: 'Delivery App',
       theme: ThemeData(
-        // Định nghĩa theme cho ứng dụng của bạn
         primarySwatch: Colors.indigo,
         scaffoldBackgroundColor: Colors.grey[50],
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.black87),
-          titleLarge: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600, color: Colors.black54),
-          bodyMedium: TextStyle(fontSize: 14.0, fontFamily: 'Hind', color: Colors.black87),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: const BorderSide(color: Colors.grey),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            foregroundColor: Colors.white,
-            backgroundColor: Colors.indigo, // Màu chữ của button
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            textStyle: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-          ),
-        ),
+        fontFamily: 'Roboto',
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4F46E5)),
+        useMaterial3: true,
       ),
-      home: const LoginScreen(), // Bắt đầu ứng dụng với LoginScreen
+      // Quyết định màn hình bắt đầu dựa trên trạng thái đăng nhập.
+      // Nếu isLoggedIn là true -> vào OwnerDashboardScreen.
+      // Nếu isLoggedIn là false -> vào LoginScreen.
+      home: isLoggedIn ? const OwnerDashboardScreen() : const LoginScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
