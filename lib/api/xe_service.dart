@@ -45,7 +45,8 @@ class XeService {
       body: json.encode(vehicle.toJson()),
     );
 
-    if (response.statusCode != 201) { // 201 Created
+    if (response.statusCode != 201) {
+      // 201 Created
       throw Exception('Failed to create vehicle: ${response.body}');
     }
   }
@@ -62,7 +63,8 @@ class XeService {
       body: json.encode(vehicle.toJson()),
     );
 
-    if (response.statusCode != 204) { // 204 No Content
+    if (response.statusCode != 204) {
+      // 204 No Content
       throw Exception('Failed to update vehicle: ${response.body}');
     }
   }
@@ -78,7 +80,8 @@ class XeService {
       },
     );
 
-    if (response.statusCode != 204) { // 204 No Content
+    if (response.statusCode != 204) {
+      // 204 No Content
       throw Exception('Failed to delete vehicle: ${response.body}');
     }
   }
