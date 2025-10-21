@@ -3,6 +3,8 @@ import 'package:frontend_nhom2/screens/owner/owner_dashboard_screen.dart';
 import '../../api/auth_service.dart';
 import '../../models/login_request_model.dart';
 import '../../utils/token_manager.dart';
+import 'package:frontend_nhom2/screens/user/user_shell.dart';
+import 'package:frontend_nhom2/screens/auth/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -40,13 +42,20 @@ class _LoginScreenState extends State<LoginScreen> {
           role: response.role,
         );
 
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              // SỬA LỖI: Điều hướng đến màn hình Dashboard chính
-              builder: (context) => const OwnerDashboardScreen(),
-            ),
+        // Tìm đoạn sau khi đăng nhập thành công, nơi đang điều hướng về OwnerDashboardScreen.
+        // Thay thế khối điều hướng bằng logic phân quyền:
+        final role = await TokenManager.getRole();
+        if (!mounted) return;
+
+        if ((role ?? '').toLowerCase() == 'driver') {
+          // User (Driver)
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const UserShell()),
+          );
+        } else {
+          // Owner như cũ (hoặc các vai trò khác không phải driver)
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const OwnerDashboardScreen()),
           );
         }
       } catch (e) {
@@ -97,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: Colors.black.withAlpha(25), // ~10% opacity
                     blurRadius: 20,
                     offset: const Offset(0, 10),
-                  )
+                  ),
                 ],
               ),
               child: Form(
@@ -125,10 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       'Đăng nhập để tiếp tục quản lý',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 32),
                     TextFormField(
@@ -171,27 +177,46 @@ class _LoginScreenState extends State<LoginScreen> {
                         padding: const EdgeInsets.only(bottom: 16.0),
                         child: Text(
                           _errorMessage!,
-                          style: const TextStyle(color: Colors.red, fontSize: 14),
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 14,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ),
                     _isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : ElevatedButton(
-                      onPressed: _login,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.deepPurple,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 5,
-                      ),
-                      child: const Text(
-                        'Đăng nhập',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
+                            onPressed: _login,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: Colors.deepPurple,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 5,
+                            ),
+                            child: const Text(
+                              'Đăng nhập',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                    // THÊM: Khoảng cách sau nút Đăng nhập
+                    const SizedBox(height: 16),
+                    // THÊM: Nút chuyển đến màn hình Đăng ký
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const RegisterScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text('Chưa có tài khoản? Đăng ký'),
                     ),
                   ],
                 ),
@@ -203,4 +228,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-

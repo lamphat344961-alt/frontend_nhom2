@@ -1,46 +1,37 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class TokenManager {
-  static const String _tokenKey = 'jwt_token';
-  static const String _fullNameKey = 'user_fullName';
-  static const String _roleKey = 'user_role';
+  // Khóa lưu trữ bảo mật
+  static const _kTok = 'auth_token';
+  static const _kRole = 'auth_role';
+  static const _kFullName = 'user_fullName'; // Giữ lại khóa này để tương thích
 
-  // Lưu đầy đủ thông tin người dùng
+  // Khởi tạo FlutterSecureStorage
+  static final _s = const FlutterSecureStorage();
+
+  // Lưu token và vai trò
   static Future<void> saveUserDetails({
     required String token,
-    required String fullName,
+    String? fullName,
     required String role,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-    await prefs.setString(_fullNameKey, fullName);
-    await prefs.setString(_roleKey, role);
+    await _s.write(key: _kTok, value: token);
+    await _s.write(key: _kRole, value: role);
+    // Lưu fullName (nếu có), nếu không có thì không lưu.
+    if (fullName != null) {
+      await _s.write(key: _kFullName, value: fullName);
+    }
   }
 
   // Lấy token
-  static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
-  }
-
-  // Lấy tên đầy đủ
-  static Future<String?> getFullName() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_fullNameKey);
-  }
+  static Future<String?> getToken() => _s.read(key: _kTok);
 
   // Lấy vai trò
-  static Future<String?> getRole() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_roleKey);
-  }
+  static Future<String?> getRole() => _s.read(key: _kRole);
 
-  // Xóa toàn bộ thông tin khi đăng xuất
-  static Future<void> clearAll() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_fullNameKey);
-    await prefs.remove(_roleKey);
-  }
+  // Lấy tên đầy đủ (giữ lại để tương thích với các đoạn code gọi nó)
+  static Future<String?> getFullName() => _s.read(key: _kFullName);
+
+  // Xóa toàn bộ thông tin
+  static Future<void> clearAll() => _s.deleteAll();
 }
-
