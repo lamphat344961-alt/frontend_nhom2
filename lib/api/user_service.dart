@@ -8,30 +8,14 @@ import '../utils/token_manager.dart';
 class UserService {
   final String? _baseUrl = dotenv.env['BASE_URL'];
 
-  // --- Hàm cũ: Tạo tài khoản cho tài xế ---
-  Future<void> createDriver(RegisterRequestModel driver) async {
-    final token = await TokenManager.getToken();
-    // Endpoint này dựa trên file UserController.cs của bạn
-    final response = await http.post(
-      Uri.parse('$_baseUrl/User/create-driver'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: json.encode(driver.toJson()),
-    );
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Tạo tài khoản thất bại: ${response.body}');
-    }
-  }
-
-  // --- HÀM MỚI: Lấy danh sách tài xế ---
+  // HÀM MỚI: Lấy danh sách tài xế
+  // Gọi: GET /api/User/drivers
   Future<List<UserModel>> getDrivers() async {
     final token = await TokenManager.getToken();
-    // QUAN TRỌNG: Backend của bạn cần có API này để trả về danh sách người dùng có vai trò "Driver".
-    // Tôi giả định endpoint là '$_baseUrl/User/drivers'. Nếu khác, hãy báo tôi sửa lại.
+
+    // Endpoint chính xác từ UserController.cs
     final response = await http.get(
-      Uri.parse('$_baseUrl/User/drivers'),
+      Uri.parse('$_baseUrl/User/drivers'), // Sửa: Thêm /api
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -45,5 +29,20 @@ class UserService {
       throw Exception('Không thể tải danh sách tài xế');
     }
   }
-}
 
+  // Gọi: POST /api/User/create-driver
+  Future<void> createDriver(RegisterRequestModel driver) async {
+    final token = await TokenManager.getToken();
+    final response = await http.post(
+      Uri.parse('$_baseUrl/User/create-driver'), // Sửa: Thêm /api
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode(driver.toJson()),
+    );
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Tạo tài khoản thất bại: ${response.body}');
+    }
+  }
+}

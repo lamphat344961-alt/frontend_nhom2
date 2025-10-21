@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../driver_management_screen.dart';
 import '../vehicle_list_screen.dart';
+// THÊM IMPORT MÀN HÌNH MỚI CHO CHỨC NĂNG QUẢN LÝ HÀNG HÓA
+import 'goods_list_screen.dart';
 
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
@@ -8,9 +10,7 @@ class HomeTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bảng Điều Khiển'),
-      ),
+      appBar: AppBar(title: const Text('Bảng Điều Khiển')),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
@@ -22,7 +22,9 @@ class HomeTab extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const VehicleListScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const VehicleListScreen(),
+                ),
               );
             },
           ),
@@ -34,23 +36,35 @@ class HomeTab extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const DriverManagementScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const DriverManagementScreen(),
+                ),
               );
             },
           ),
+          // CẬP NHẬT ONTAP CHO QUẢN LÝ HÀNG HÓA
           _buildManagementCard(
             context: context,
             icon: Icons.inventory_2,
             title: 'Quản Lý Hàng Hóa',
             subtitle: 'Xem và quản lý kho hàng của bạn',
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const GoodsListScreen(),
+                ),
+              );
+            },
           ),
           _buildManagementCard(
             context: context,
             icon: Icons.article,
             title: 'Quản Lý Đơn Hàng',
             subtitle: 'Tạo và theo dõi các đơn hàng',
-            onTap: () {},
+            onTap: () {
+              // TODO: Điều hướng tới Quản Lý Đơn Hàng
+            },
           ),
         ],
       ),
@@ -69,9 +83,15 @@ class HomeTab extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 16.0,
+          horizontal: 20.0,
+        ),
         leading: Icon(icon, size: 40, color: Theme.of(context).primaryColor),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         subtitle: Text(subtitle, style: TextStyle(color: Colors.grey.shade600)),
         trailing: const Icon(Icons.arrow_forward_ios),
         onTap: onTap,

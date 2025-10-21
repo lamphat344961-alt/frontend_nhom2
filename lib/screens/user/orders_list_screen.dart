@@ -1,71 +1,72 @@
-// lib/screens/user/orders_list_screen.dart
 import 'package:flutter/material.dart';
-import 'package:frontend_nhom2/providers/orders_provider.dart';
-import 'package:frontend_nhom2/widgets/order_card.dart';
 import 'package:provider/provider.dart';
-// THÊM: Import màn hình đăng nhập để điều hướng khi token hết hạn
-import 'package:frontend_nhom2/screens/auth/login_screen.dart';
+import 'package:frontend_nhom2/providers/orders_provider.dart';
+import 'package:frontend_nhom2/models/don_hang_model.dart';
 
 class OrdersListScreen extends StatelessWidget {
-  const OrdersListScreen({super.key});
+  final VoidCallback? onSelectToMap;
+  const OrdersListScreen({super.key, this.onSelectToMap});
 
   @override
   Widget build(BuildContext context) {
     final prov = context.watch<OrdersProvider>();
-    return RefreshIndicator(
-      onRefresh: () async {
-        try {
-          // Thực hiện việc tải dữ liệu từ provider
-          await context.read<OrdersProvider>().load();
-        } catch (e) {
-          final msg = e.toString();
-          if (msg.contains('AUTH_401')) {
-            // token hết hạn → về Login và xóa tất cả route cũ
-            if (!context.mounted) return;
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
-              (_) => false,
-            );
-          } else if (msg.contains('AUTH_403')) {
-            // Sai quyền (cần role Driver)
-            if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Bạn không có quyền Driver để truy cập đơn hàng này',
-                ),
-              ),
-            );
-          } else {
-            // Lỗi khác
-            if (!context.mounted) return;
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('Lỗi tải đơn: $msg')));
+
+    Widget body() {
+      switch (prov.state) {
+        case OrdersState.loading:
+          return const Center(child: CircularProgressIndicator());
+        case OrdersState.error:
+          return Center(child: Text('Lỗi: ${prov.error}'));
+        case OrdersState.loaded:
+          if (prov.items.isEmpty) {
+            return const Center(child: Text('Chưa có đơn giao'));
           }
-        }
-      },
-      child: prov.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
+          return RefreshIndicator(
+            onRefresh: prov.refresh,
+            child: ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: prov.items.length,
-              itemBuilder: (c, i) => OrderCard(
-                item: prov.items[i],
-                onMapTap: () {
-                  context.read<OrdersProvider>().focusOrder(
-                    prov.items[i].maDon,
-                  );
-                  DefaultTabController.of(context);
-                  // chuyển sang tab Map trong UserShell
-                  // Giải pháp tối giản: dùng Notification để shell đổi tab
-                  _SwitchToMapNotification().dispatch(context);
-                },
-              ),
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (_, i) {
+                final o = prov.items[i];
+                return _OrderTile(
+                  item: o,
+                  onTap: () {
+                    prov.focusOrder(o.maDon);
+                    onSelectToMap?.call(); // chuyển sang tab Map
+                  },
+                );
+              },
             ),
-    );
+          );
+        default:
+          return const SizedBox();
+      }
+    }
+
+    return Scaffold(body: body());
   }
 }
 
-// Thông báo để UserShell chuyển sang tab Map
-class _SwitchToMapNotification extends Notification {}
+class _OrderTile extends StatelessWidget {
+  final DonHangItem item;
+  final VoidCallback onTap;
+  const _OrderTile({required this.item, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = [
+      if (item.tenDiemGiao?.isNotEmpty == true) item.tenDiemGiao,
+      if (item.diaChi?.isNotEmpty == true) item.diaChi,
+      if (item.trangThai?.isNotEmpty == true) 'Trạng thái: ${item.trangThai}',
+    ].whereType<String>().join(' · ');
+
+    return ListTile(
+      leading: const Icon(Icons.assignment_outlined),
+      title: Text('Đơn: ${item.maDon}'),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+  }
+}

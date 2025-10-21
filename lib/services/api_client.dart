@@ -51,5 +51,8 @@ class ApiClient {
         error: true,
       ),
     );
+
+    // Lệnh print được chèn vào đây
+    print('Bearer token = ${dio.options.headers['Authorization']}');
   }
 }
