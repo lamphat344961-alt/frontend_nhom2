@@ -7,6 +7,8 @@ class OrdersService {
   // Sử dụng thể hiện Dio duy nhất đã được cấu hình từ ApiClient
   final Dio _dio = ApiClient().dio;
 
+  get DiemGiao => null;
+
   // Lấy danh sách đơn hàng đã được giao cho tài xế (Driver)
   Future<List<DonHangItem>> getMyDeliveries() async {
     try {

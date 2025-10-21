@@ -52,4 +52,6 @@ class ApiClient {
       ),
     );
   }
+
+  get http => null;
 }
