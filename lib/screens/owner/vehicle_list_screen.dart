@@ -34,7 +34,13 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
   Future<void> _navigateToAddVehicle() async {
     final result = await Navigator.push(
       context,
+<<<<<<< HEAD
       MaterialPageRoute(builder: (context) => const VehicleFormScreen()), // Sửa: Dùng form mới
+=======
+      MaterialPageRoute(
+        builder: (context) => const VehicleFormScreen(),
+      ), // Sửa: Dùng form mới
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053
     );
     if (result == true) {
       _loadVehicles(); // Tải lại danh sách nếu có xe mới được thêm
@@ -46,7 +52,12 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
+<<<<<<< HEAD
         builder: (context) => VehicleFormScreen(vehicleToEdit: vehicle), // Sửa: Dùng form mới
+=======
+        builder: (context) =>
+            VehicleFormScreen(vehicleToEdit: vehicle), // Sửa: Dùng form mới
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053
       ),
     );
     if (result == true) {
@@ -63,7 +74,14 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
         title: const Text('Xác nhận xóa'),
         content: Text('Bạn có chắc muốn xóa xe ${vehicle.bsXe}?'),
         actions: [
+<<<<<<< HEAD
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+=======
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Hủy'),
+          ),
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Xóa', style: TextStyle(color: Colors.red)),
@@ -78,6 +96,7 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
 
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
+<<<<<<< HEAD
           const SnackBar(content: Text('Xóa xe thành công!'), backgroundColor: Colors.green),
         );
         _loadVehicles(); // Tải lại danh sách
@@ -87,6 +106,21 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Lỗi khi xóa: $e'), backgroundColor: Colors.red),
+=======
+          const SnackBar(
+            content: Text('Xóa xe thành công!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadVehicles(); // Tải lại danh sách
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi xóa: $e'),
+            backgroundColor: Colors.red,
+          ),
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053
         );
       }
     }
@@ -135,7 +169,14 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.delete_outline, color: Colors.red),
+<<<<<<< HEAD
                 title: const Text('Xóa xe', style: TextStyle(color: Colors.red)),
+=======
+                title: const Text(
+                  'Xóa xe',
+                  style: TextStyle(color: Colors.red),
+                ),
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053
                 onTap: () {
                   Navigator.pop(ctx); // Đóng modal
                   _deleteVehicle(vehicle);
@@ -152,7 +193,10 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quản Lý Xe', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Quản Lý Xe',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         elevation: 1,
       ),
@@ -179,10 +223,16 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
               final bool isAssigned = vehicle.driverFullName != null;
 
               return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                margin: const EdgeInsets.symmetric(
+                  vertical: 8.0,
+                  horizontal: 8.0,
+                ),
                 elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: ListTile(
+<<<<<<< HEAD
                   contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                   leading: CircleAvatar(
                     backgroundColor: isAssigned ? const Color(0xFF4F46E5).withAlpha(25) : Colors.grey.shade100,
@@ -194,13 +244,41 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                   title: Text(
                     vehicle.bsXe ?? 'Không có biển số',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+=======
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 16,
+                  ),
+                  leading: CircleAvatar(
+                    backgroundColor: isAssigned
+                        ? const Color(0xFF4F46E5).withAlpha(25)
+                        : Colors.grey.shade100,
+                    child: Icon(
+                      Icons.directions_car,
+                      color: isAssigned ? const Color(0xFF4F46E5) : Colors.grey,
+                    ),
+                  ),
+                  title: Text(
+                    vehicle.bsXe ?? 'Không có biển số',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053
                   ),
                   // Hiển thị TÊN TÀI XẾ hoặc "Chưa gán tài xế"
                   subtitle: Text(
                     isAssigned ? vehicle.driverFullName! : 'Chưa gán tài xế',
                     style: TextStyle(
+<<<<<<< HEAD
                         color: isAssigned ? Colors.green.shade700 : Colors.orange.shade800,
                         fontWeight: FontWeight.w500
+=======
+                      color: isAssigned
+                          ? Colors.green.shade700
+                          : Colors.orange.shade800,
+                      fontWeight: FontWeight.w500,
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053
                     ),
                   ),
                   // Nút 3 chấm để mở menu
@@ -208,7 +286,12 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                     icon: const Icon(Icons.more_vert),
                     onPressed: () => _showVehicleOptions(vehicle),
                   ),
+<<<<<<< HEAD
                   onTap: () => _showVehicleOptions(vehicle), // Bấm vào đâu cũng ra menu
+=======
+                  onTap: () =>
+                      _showVehicleOptions(vehicle), // Bấm vào đâu cũng ra menu
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053
                 ),
               );
             },
@@ -259,14 +342,30 @@ class _AssignDriverModalState extends State<AssignDriverModal> {
       await widget.xeService.assignDriver(widget.vehicle.bsXe!, driver.userId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
+<<<<<<< HEAD
           SnackBar(content: Text('Đã gán tài xế ${driver.fullName} cho xe ${widget.vehicle.bsXe}'), backgroundColor: Colors.green),
+=======
+          SnackBar(
+            content: Text(
+              'Đã gán tài xế ${driver.fullName} cho xe ${widget.vehicle.bsXe}',
+            ),
+            backgroundColor: Colors.green,
+          ),
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053
         );
         Navigator.pop(context); // Đóng modal
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
+<<<<<<< HEAD
           SnackBar(content: Text('Lỗi khi gán: $e'), backgroundColor: Colors.red),
+=======
+          SnackBar(
+            content: Text('Lỗi khi gán: $e'),
+            backgroundColor: Colors.red,
+          ),
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053
         );
       }
     } finally {
@@ -279,7 +378,13 @@ class _AssignDriverModalState extends State<AssignDriverModal> {
   @override
   Widget build(BuildContext context) {
     return Padding(
+<<<<<<< HEAD
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+=======
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053
       child: SizedBox(
         height: MediaQuery.of(context).size.height * 0.6,
         child: Column(
@@ -288,7 +393,14 @@ class _AssignDriverModalState extends State<AssignDriverModal> {
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 'Chọn tài xế gán cho xe ${widget.vehicle.bsXe}',
+<<<<<<< HEAD
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+=======
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053
               ),
             ),
             if (_isAssigning) const LinearProgressIndicator(),
@@ -315,7 +427,13 @@ class _AssignDriverModalState extends State<AssignDriverModal> {
                         leading: const CircleAvatar(child: Icon(Icons.person)),
                         title: Text(driver.fullName),
                         subtitle: Text(driver.username),
+<<<<<<< HEAD
                         onTap: _isAssigning ? null : () => _assignDriver(driver),
+=======
+                        onTap: _isAssigning
+                            ? null
+                            : () => _assignDriver(driver),
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053
                       );
                     },
                   );
@@ -327,4 +445,8 @@ class _AssignDriverModalState extends State<AssignDriverModal> {
       ),
     );
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 3ae696c0b5147b44fc64b4b51a8e18fa5d6b8053

@@ -23,20 +23,26 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
       try {
         final newVehicle = XeCreateModel(
           bsXe: _bsxeController.text,
-          tenxe: _tenxeController.text,
+          tenXe: _tenxeController.text,
           ttXe: _ttxeController.text,
         );
         await _xeService.createVehicle(newVehicle);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Thêm xe thành công!'), backgroundColor: Colors.green),
+            const SnackBar(
+              content: Text('Thêm xe thành công!'),
+              backgroundColor: Colors.green,
+            ),
           );
           Navigator.pop(context, true); // Trả về true để báo hiệu cần refresh
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lỗi: ${e.toString()}'), backgroundColor: Colors.red),
+            SnackBar(
+              content: Text('Lỗi: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       } finally {
@@ -60,8 +66,11 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
             children: [
               TextFormField(
                 controller: _bsxeController,
-                decoration: const InputDecoration(labelText: 'Biển số xe (BS_XE)'),
-                validator: (value) => value!.isEmpty ? 'Vui lòng nhập biển số' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Biển số xe (BS_XE)',
+                ),
+                validator: (value) =>
+                    value!.isEmpty ? 'Vui lòng nhập biển số' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -77,9 +86,9 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(
-                onPressed: _addVehicle,
-                child: const Text('Lưu'),
-              ),
+                      onPressed: _addVehicle,
+                      child: const Text('Lưu'),
+                    ),
             ],
           ),
         ),
