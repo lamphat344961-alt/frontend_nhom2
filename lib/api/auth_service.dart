@@ -1,40 +1,91 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../models/login_request_model.dart';
-import '../models/login_response_model.dart';
+import 'package:dio/dio.dart';
+import 'package:frontend_nhom2/constants/env.dart';
+import 'package:frontend_nhom2/utils/token_manager.dart';
 
-class AuthService {
-  // Lấy BASE_URL từ file .env
-  final String? baseUrl = dotenv.env['BASE_URL'];
+class AuthPayload {
+  final String username;
+  final String password;
+  AuthPayload(this.username, this.password);
 
-  // Hàm đăng nhập
-  Future<LoginResponseModel> login(LoginRequestModel loginRequest) async {
-    // 1. Kiểm tra xem BASE_URL có tồn tại không
-    if (baseUrl == null) {
-      throw Exception("Lỗi: Không tìm thấy BASE_URL trong file .env");
-    }
+  Map<String, dynamic> toJson() => {'username': username, 'password': password};
+}
 
-    // 2. Tạo URL đầy đủ cho API login
-    // Dựa trên AuthController.cs, endpoint là /api/Auth/login
-    final url = Uri.parse('$baseUrl/Auth/login');
+class RegisterPayload {
+  final String username;
+  final String password;
+  final String fullName;
+  final String? phoneNumber;
+  // Role thực tế của backend: "Driver" cho người dùng app User
+  RegisterPayload({
+    required this.username,
+    required this.password,
+    required this.fullName,
+    this.phoneNumber,
+  });
 
-    // 3. Gửi request POST lên server
-    final response = await http.post(
-      url,
+  Map<String, dynamic> toJson() => {
+    'username': username,
+    'password': password,
+    'fullName': fullName,
+    'phoneNumber': phoneNumber,
+    'role': 'Driver',
+  };
+}
+
+class AuthServiceV2 {
+  final Dio _http = Dio(
+    BaseOptions(
+      baseUrl: '${Env.BASE_URL}/api/Auth',
       headers: {
+        'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode(loginRequest.toJson()),
-    );
+      connectTimeout: const Duration(seconds: 15),
+    ),
+  );
 
-    // 4. Xử lý kết quả trả về
-    if (response.statusCode == 200) {
-      // Nếu thành công (status code 200), chuyển JSON thành object Dart
-      return LoginResponseModel.fromJson(jsonDecode(response.body));
-    } else {
-      // Nếu thất bại, ném ra lỗi với thông báo từ server
-      throw Exception('Đăng nhập thất bại: ${response.body}');
+  Future<void> login(AuthPayload payload) async {
+    try {
+      final res = await _http.post('/login', data: payload.toJson());
+      if (res.statusCode == 200) {
+        final data = res.data as Map<String, dynamic>;
+
+        final raw = (data['token'] ?? '').toString();
+        final role = (data['role'] ?? '').toString();
+        final fullName = (data['fullName'] ?? '').toString();
+
+        // Loại bỏ tiền tố 'Bearer ' nếu có
+        final token = raw.startsWith('Bearer ') ? raw.substring(7) : raw;
+
+        if (token.isEmpty || role.isEmpty) {
+          throw Exception('Token hoặc Role không được trả về từ server.');
+        }
+
+        await TokenManager.saveUserDetails(
+          token: token,
+          fullName: fullName,
+          role: role,
+        );
+      } else {
+        throw Exception('Đăng nhập thất bại: ${res.statusCode}');
+      }
+    } on DioException catch (e) {
+      // Xử lý lỗi chi tiết hơn từ Dio
+      final message = e.response?.data?['message'] ?? e.message;
+      throw Exception('Lỗi mạng hoặc server: $message');
+    } catch (e) {
+      throw Exception('Đã xảy ra lỗi không xác định: $e');
     }
+  }
+
+  Future<void> register(RegisterPayload payload) async {
+    final res = await _http.post('/register', data: payload.toJson());
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      throw Exception('Đăng ký thất bại: ${res.statusCode} ${res.data}');
+    }
+  }
+
+  Future<void> logout() async {
+    await TokenManager.clearAll();
   }
 }

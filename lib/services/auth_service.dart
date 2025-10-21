@@ -45,26 +45,36 @@ class AuthServiceV2 {
   );
 
   Future<void> login(AuthPayload payload) async {
-    final res = await _http.post('/login', data: payload.toJson());
-    if (res.statusCode == 200) {
-      final data = res.data as Map<String, dynamic>;
+    try {
+      final res = await _http.post('/login', data: payload.toJson());
+      if (res.statusCode == 200) {
+        final data = res.data as Map<String, dynamic>;
 
-      // Lấy raw token và role từ response, hỗ trợ nhiều kiểu chữ (cả CamelCase và lowercase)
-      final raw = (data['Token'] ?? data['token'] ?? '').toString();
-      final role = (data['Role'] ?? data['role'] ?? '').toString();
+        final raw = (data['token'] ?? '').toString();
+        final role = (data['role'] ?? '').toString();
+        final fullName = (data['fullName'] ?? '').toString();
 
-      // CHỈNH SỬA: Loại bỏ tiền tố 'Bearer ' nếu tồn tại trước khi lưu
-      final token = raw.startsWith('Bearer ') ? raw.substring(7) : raw;
+        // Loại bỏ tiền tố 'Bearer ' nếu có
+        final token = raw.startsWith('Bearer ') ? raw.substring(7) : raw;
 
-      final fullName = data['FullName'] ?? data['fullName'] ?? '';
+        if (token.isEmpty || role.isEmpty) {
+          throw Exception('Token hoặc Role không được trả về từ server.');
+        }
 
-      await TokenManager.saveUserDetails(
-        token: token,
-        fullName: fullName,
-        role: role,
-      );
-    } else {
-      throw Exception('Đăng nhập thất bại: ${res.statusCode}');
+        await TokenManager.saveUserDetails(
+          token: token,
+          fullName: fullName,
+          role: role,
+        );
+      } else {
+        throw Exception('Đăng nhập thất bại: ${res.statusCode}');
+      }
+    } on DioException catch (e) {
+      // Xử lý lỗi chi tiết hơn từ Dio
+      final message = e.response?.data?['message'] ?? e.message;
+      throw Exception('Lỗi mạng hoặc server: $message');
+    } catch (e) {
+      throw Exception('Đã xảy ra lỗi không xác định: $e');
     }
   }
 

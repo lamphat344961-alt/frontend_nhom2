@@ -10,10 +10,9 @@ class LoginResponseModel {
   });
 
   factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
-    return LoginResponseModel(
-      token: json['token'] ?? '',
-      fullName: json['fullName'] ?? '',
-      role: json['role'] ?? '',
-    );
+    final token = (json['token'] ?? json['Token'] ?? '').toString();
+    final fullName = (json['fullName'] ?? json['FullName'] ?? '').toString();
+    final role = (json['role'] ?? json['Role'] ?? '').toString();
+    return LoginResponseModel(token: token, fullName: fullName, role: role);
   }
 }

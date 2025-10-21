@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_nhom2/screens/owner/owner_dashboard_screen.dart';
 import '../../api/auth_service.dart';
-import '../../models/login_request_model.dart';
 import '../../utils/token_manager.dart';
 import 'package:frontend_nhom2/screens/user/user_shell.dart';
 import 'package:frontend_nhom2/screens/auth/register_screen.dart';
@@ -17,7 +16,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  final AuthService _authService = AuthService();
+  // Sử dụng AuthServiceV2
+  final AuthServiceV2 _authService = AuthServiceV2();
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -29,31 +29,23 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        final request = LoginRequestModel(
-          username: _usernameController.text,
-          password: _passwordController.text,
-        );
-        final response = await _authService.login(request);
-
-        // SỬA LỖI: Gọi hàm saveUserDetails với đầy đủ tham số cho đúng
-        await TokenManager.saveUserDetails(
-          token: response.token,
-          fullName: response.fullName,
-          role: response.role,
+        // Sử dụng AuthPayload
+        final payload = AuthPayload(
+          _usernameController.text,
+          _passwordController.text,
         );
 
-        // Tìm đoạn sau khi đăng nhập thành công, nơi đang điều hướng về OwnerDashboardScreen.
-        // Thay thế khối điều hướng bằng logic phân quyền:
+        await _authService.login(payload);
+
+        // Logic phân quyền
         final role = await TokenManager.getRole();
         if (!mounted) return;
 
         if ((role ?? '').toLowerCase() == 'driver') {
-          // User (Driver)
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const UserShell()),
           );
         } else {
-          // Owner như cũ (hoặc các vai trò khác không phải driver)
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const OwnerDashboardScreen()),
           );
@@ -83,7 +75,6 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        // NÂNG CẤP: Giao diện với nền gradient
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.deepPurple.shade200, Colors.deepPurple.shade800],
@@ -95,15 +86,13 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(32.0),
             child: Container(
-              // NÂNG CẤP: Form đăng nhập trong thẻ bo góc có đổ bóng
               padding: const EdgeInsets.all(24.0),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16.0),
                 boxShadow: [
                   BoxShadow(
-                    // SỬA WARNING: Thay thế withOpacity bằng withAlpha
-                    color: Colors.black.withAlpha(25), // ~10% opacity
+                    color: Colors.black.withAlpha(25),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -205,9 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
-                    // THÊM: Khoảng cách sau nút Đăng nhập
                     const SizedBox(height: 16),
-                    // THÊM: Nút chuyển đến màn hình Đăng ký
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).push(

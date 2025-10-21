@@ -3,11 +3,14 @@ import 'package:frontend_nhom2/constants/env.dart';
 import 'package:frontend_nhom2/utils/token_manager.dart';
 
 class ApiClient {
+  // Tạo một thể hiện duy nhất (singleton) cho ApiClient
   static final ApiClient _inst = ApiClient._internal();
   factory ApiClient() => _inst;
 
+  // Khai báo Dio instance sẽ được sử dụng trong toàn bộ ứng dụng
   late final Dio dio;
 
+  // Constructor nội bộ, chỉ được gọi một lần
   ApiClient._internal() {
     dio = Dio(
       BaseOptions(
@@ -18,34 +21,34 @@ class ApiClient {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        // Để Dio trả về response ngay cả khi gặp lỗi 4xx/5xx, giúp tự xử lý.
-        validateStatus: (_) => true,
+        // giúp việc bắt lỗi ở các service trở nên đơn giản và nhất quán.
       ),
     );
 
-    // LogInterceptor để hiển thị chi tiết request/response/error trong console.
-    dio.interceptors.add(
-      LogInterceptor(
-        request: true,
-        requestBody: true,
-        responseBody: true,
-        error: true,
-      ),
-    );
-
-    // Cấu hình Interceptor để tự động thêm Token
+    // Thêm Interceptor để tự động đính kèm token vào mỗi request
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          // Lấy token từ bộ nhớ an toàn
           final token = await TokenManager.getToken();
           if (token != null && token.isNotEmpty) {
-            // Cập nhật: Kiểm tra nếu token đã có prefix 'Bearer ' chưa
-            options.headers['Authorization'] = token.startsWith('Bearer ')
-                ? token
-                : 'Bearer $token';
+            // Thêm token vào header Authorization
+            options.headers['Authorization'] = 'Bearer $token';
           }
-          handler.next(options);
+          // Cho phép request được gửi đi tiếp
+          return handler.next(options);
         },
+      ),
+    );
+
+    // Nên đặt ở cuối để nó có thể log cả thông tin mà các interceptor trước đã thêm vào (như token)
+    dio.interceptors.add(
+      LogInterceptor(
+        request: true,
+        requestHeader: true, // Bật để xem header, kiểm tra token
+        requestBody: true,
+        responseBody: true,
+        error: true,
       ),
     );
   }

@@ -1,104 +1,101 @@
 import 'package:dio/dio.dart';
-import 'package:frontend_nhom2/constants/env.dart';
-import 'package:frontend_nhom2/models/don_hang_model.dart';
 import 'package:frontend_nhom2/models/diem_giao_model.dart';
-import 'package:frontend_nhom2/services/api_client.dart'; // Đảm bảo đã import
+import 'package:frontend_nhom2/models/don_hang_model.dart';
+import 'package:frontend_nhom2/services/api_client.dart';
 
 class OrdersService {
-  // Sử dụng thể hiện Dio đã được cấu hình từ ApiClient (không tạo Dio mới)
+  // Sử dụng thể hiện Dio duy nhất đã được cấu hình từ ApiClient
   final Dio _dio = ApiClient().dio;
-
-  OrdersService() {
-    // Tích hợp LogInterceptor vào dio instance
-    // Kiểm tra để tránh thêm nhiều lần nếu OrdersService được khởi tạo nhiều lần
-    if (!_dio.interceptors.any((element) => element is LogInterceptor)) {
-      _dio.interceptors.add(
-        LogInterceptor(request: true, requestBody: false, responseBody: false),
-      );
-    }
-  }
 
   // Lấy danh sách đơn hàng đã được giao cho tài xế (Driver)
   Future<List<DonHangItem>> getMyDeliveries() async {
-    // Các đường dẫn API tiềm năng, thử lần lượt
-    final paths = <String>[
-      '/Driver/my-deliveries',
-      '/Driver/MyDeliveries',
-      '/DonHang/assigned',
-      '/DonHang/mine',
-      '/DonHang', // fallback
-    ];
+    try {
+      // Gọi đến endpoint duy nhất và chính xác của backend
+      final res = await _dio.get('/Driver/my-deliveries');
 
-    for (final p in paths) {
-      try {
-        final res = await _dio.get(p);
-
-        // --- BẮT ĐẦU XỬ LÝ TRẠNG THÁI HTTP (CODE FIX) ---
-        if (res.statusCode == 200) {
-          final data = res.data;
-          if (data is List) {
-            // Sử dụng fromDriverJson để đảm bảo dữ liệu tương thích với mô hình Driver
-            return data
-                .map(
-                  (e) =>
-                      DonHangItem.fromDriverJson(Map<String, dynamic>.from(e)),
-                )
-                .toList();
-          }
-        } else if (res.statusCode == 401) {
-          // Lỗi xác thực: Token không hợp lệ/hết hạn
-          throw Exception('AUTH_401');
-        } else if (res.statusCode == 403) {
-          // Lỗi ủy quyền: Tài khoản không có quyền truy cập endpoint này (sai role)
-          throw Exception('AUTH_403');
-        } else if (res.statusCode != 404) {
-          // Các lỗi HTTP khác không phải 404
-          throw Exception('HTTP ${res.statusCode} @ $p');
-        }
-        // --- KẾT THÚC XỬ LÝ TRẠNG THÁI HTTP ---
-      } on DioException catch (e) {
-        // Chỉ rethrow các lỗi nghiêm trọng (ví dụ: mất mạng, lỗi server 5xx)
-        // Bỏ qua lỗi 404 nếu xảy ra do thử endpoint không tồn tại
-        if (e.response?.statusCode != 404) rethrow;
+      // Nếu request thành công (code 200), Dio sẽ không báo lỗi và chạy xuống đây
+      final data = res.data;
+      if (data is List) {
+        // Ánh xạ dữ liệu JSON nhận được thành danh sách các đối tượng DonHangItem
+        return data
+            .map(
+              (e) => DonHangItem.fromDriverJson(Map<String, dynamic>.from(e)),
+            )
+            .toList();
       }
+      // Nếu data trả về không phải là một danh sách, trả về mảng rỗng để tránh lỗi
+      return [];
+    } on DioException catch (e) {
+      // Bắt lỗi tập trung do Dio ném ra
+      if (e.response != null) {
+        // Trường hợp có phản hồi từ server nhưng là mã lỗi (4xx, 5xx)
+        switch (e.response!.statusCode) {
+          case 401:
+            throw Exception('AUTH_401: Token không hợp lệ hoặc đã hết hạn.');
+          case 403:
+            throw Exception(
+              'AUTH_403: Bạn không có quyền truy cập chức năng này.',
+            );
+          default:
+            throw Exception('Lỗi từ Server: ${e.response!.statusCode}');
+        }
+      } else {
+        // Trường hợp không có phản hồi từ server (ví dụ: mất mạng, sai địa chỉ IP)
+        throw Exception('Lỗi kết nối mạng, vui lòng kiểm tra lại.');
+      }
+    } catch (e) {
+      // Bắt các lỗi không lường trước khác
+      throw Exception('Đã xảy ra lỗi không xác định: $e');
     }
-    // Nếu duyệt qua hết tất cả các path mà không thành công (hoặc chỉ gặp 404)
-    throw Exception('NO_DELIVERY_ENDPOINT_FOUND');
   }
 
-  // Lấy CtDiemGiao theo đơn để bổ sung Lat/Lng
+  // Lấy chi tiết điểm giao theo mã đơn hàng
   Future<List<Map<String, dynamic>>> getCtDiemGiaoByDon(String maDon) async {
-    final res = await _dio.get('/CtDiemGiao/by-don/$maDon');
-    if (res.statusCode == 200) {
+    try {
+      // Endpoint này cần tồn tại bên backend
+      final res = await _dio.get('/CtDiemGiao/by-don/$maDon');
       final list = res.data;
-      if (list is List) return list.cast<Map<String, dynamic>>();
+      if (list is List) {
+        return list.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      // Bỏ qua lỗi nếu không tìm thấy chi tiết, trả về mảng rỗng
+      print('Không tìm thấy chi tiết điểm giao cho đơn $maDon: $e');
+      return [];
     }
-    return <Map<String, dynamic>>[];
   }
 
-  // Helper: trộn lat/lng vào danh sách đơn
+  // Helper: Bổ sung thông tin lat/lng vào danh sách đơn hàng
   Future<List<DonHangItem>> enrichWithLatLng(List<DonHangItem> orders) async {
     final result = <DonHangItem>[];
     for (final o in orders) {
+      // Nếu đã có tọa độ thì bỏ qua
       if (o.lat != null && o.lng != null) {
         result.add(o);
         continue;
       }
-      // Thử gọi CtDiemGiao/by-don
+
+      // Nếu chưa có, gọi API để lấy chi tiết điểm giao
       final details = await getCtDiemGiaoByDon(o.maDon);
-      // tìm item có DiemGiao
+      bool foundLatLng = false;
       for (final d in details) {
-        final dgJson = d['DiemGiao'] ?? d['diemGiao'];
+        // Kiểm tra cả 'diemGiao' (chữ thường) và 'DiemGiao' (chữ hoa)
+        final dgJson = d['diemGiao'] ?? d['DiemGiao'];
         if (dgJson != null) {
           final dg = DiemGiao.fromJson(Map<String, dynamic>.from(dgJson));
           if (dg.lat != null && dg.lng != null) {
             result.add(o.copyWith(lat: dg.lat, lng: dg.lng));
-            break;
+            foundLatLng = true;
+            break; // Dừng lại khi tìm thấy tọa độ đầu tiên
           }
         }
       }
-      // nếu vẫn chưa có → giữ nguyên
-      if (!result.any((x) => x.maDon == o.maDon)) result.add(o);
+
+      // Nếu sau khi gọi API vẫn không tìm thấy tọa độ, giữ nguyên đơn hàng cũ
+      if (!foundLatLng) {
+        result.add(o);
+      }
     }
     return result;
   }

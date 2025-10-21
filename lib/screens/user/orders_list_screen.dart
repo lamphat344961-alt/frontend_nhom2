@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:frontend_nhom2/providers/orders_provider.dart';
 import 'package:frontend_nhom2/widgets/order_card.dart';
 import 'package:provider/provider.dart';
+// THÊM: Import màn hình đăng nhập để điều hướng khi token hết hạn
+import 'package:frontend_nhom2/screens/auth/login_screen.dart';
 
 class OrdersListScreen extends StatelessWidget {
   const OrdersListScreen({super.key});
@@ -11,7 +13,38 @@ class OrdersListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final prov = context.watch<OrdersProvider>();
     return RefreshIndicator(
-      onRefresh: () => context.read<OrdersProvider>().load(),
+      onRefresh: () async {
+        try {
+          // Thực hiện việc tải dữ liệu từ provider
+          await context.read<OrdersProvider>().load();
+        } catch (e) {
+          final msg = e.toString();
+          if (msg.contains('AUTH_401')) {
+            // token hết hạn → về Login và xóa tất cả route cũ
+            if (!context.mounted) return;
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+              (_) => false,
+            );
+          } else if (msg.contains('AUTH_403')) {
+            // Sai quyền (cần role Driver)
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Bạn không có quyền Driver để truy cập đơn hàng này',
+                ),
+              ),
+            );
+          } else {
+            // Lỗi khác
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Lỗi tải đơn: $msg')));
+          }
+        }
+      },
       child: prov.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
@@ -25,8 +58,6 @@ class OrdersListScreen extends StatelessWidget {
                   );
                   DefaultTabController.of(context);
                   // chuyển sang tab Map trong UserShell
-                  // gọi từ shell: setState -> index=1
-                  // ở đây: dùng Navigator pop/push? Đơn giản: dùng Inherited callback
                   // Giải pháp tối giản: dùng Notification để shell đổi tab
                   _SwitchToMapNotification().dispatch(context);
                 },
